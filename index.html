@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS Countdown Video Maker</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=Orbitron:wght@700;900&family=Oswald:wght@600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">CS Countdown <span>Video Maker</span></div>
+  <div class="top-note">1920×1080 · 30 fps · renders faster than real time</div>
+</header>
+
+<main class="app">
+  <section class="stage">
+    <div class="screen" id="screen"><canvas id="preview" width="1920" height="1080"></canvas></div>
+    <div class="transport">
+      <button class="icon-btn" id="btnRestart" title="Back to start (Home)">⏮</button>
+      <button class="icon-btn play" id="btnPlay" title="Play / pause (Space)">▶</button>
+      <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Preview position">
+      <span class="clock" id="clock">0:00 / 0:00</span>
+      <button class="chip" id="btnLast">Last 15 s</button>
+    </div>
+    <div class="hint">Space = play/pause · Home = restart · E = last 5 seconds · the preview is exactly what gets exported</div>
+  </section>
+
+  <aside class="side">
+
+    <details class="sec" open>
+      <summary>Presets</summary>
+      <div class="row"><select id="presetSel" aria-label="Presets"></select></div>
+      <div class="chips">
+        <button id="btnPresetSave">Save as preset…</button>
+        <button id="btnPresetDelete">Delete</button>
+        <button id="btnPresetExport">Export to file…</button>
+        <button id="btnPresetExportAll" hidden>Export all presets</button>
+        <label class="filebtn chip">Import file…<input type="file" id="presetImport" accept=".json,application/json"></label>
+      </div>
+      <div class="note" id="presetStatus">Presets are kept in this browser. Export a file to back them up or use them on another computer; sound clips are included.</div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Timer</summary>
+      <div class="row">
+        <div class="timeset">
+          <label><input type="number" id="hours" min="0" max="99" data-k="hours"><span>hrs</span></label>
+          <b>:</b>
+          <label><input type="number" id="minutes" min="0" max="59" data-k="minutes"><span>min</span></label>
+          <b>:</b>
+          <label><input type="number" id="seconds" min="0" max="59" data-k="seconds"><span>sec</span></label>
+        </div>
+      </div>
+      <div class="row">
+        <span class="lbl">Direction</span>
+        <div class="seg" data-k="direction">
+          <button data-v="down">Count down</button><button data-v="up">Count up</button>
+        </div>
+      </div>
+      <div class="row">
+        <span class="lbl">Show as</span>
+        <select data-k="format">
+          <option value="auto">Auto (adds hours when ≥ 1 h)</option>
+          <option value="m:ss">M:SS — 5:00</option>
+          <option value="mm:ss">MM:SS — 05:00</option>
+          <option value="h:mm:ss">H:MM:SS — 0:05:00</option>
+          <option value="hh:mm:ss">HH:MM:SS — 00:05:00</option>
+          <option value="ss">Seconds only — 300</option>
+        </select>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Theme</summary>
+      <div class="themes" id="themes"></div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Text</summary>
+      <div class="row col">
+        <span class="lbl">Label <em>(leave empty for the time only)</em></span>
+        <input type="text" data-k="label" maxlength="40" placeholder="Time only">
+        <div class="chips" data-for="label">
+          <button data-v="">Time only</button><button data-v="COUNTDOWN">Countdown</button>
+          <button data-v="STARTING SOON">Starting soon</button><button data-v="BREAK">Break</button>
+          <button data-v="BACK IN">Back in</button><button data-v="TIME LEFT">Time left</button>
+        </div>
+      </div>
+      <div class="row">
+        <span class="lbl">Hold at the end</span>
+        <input type="number" class="num" data-k="endHold" min="0" max="600" step="1"><span class="unit">sec</span>
+      </div>
+      <div class="row col">
+        <span class="lbl">End message <em>(shown during the hold — empty keeps 0:00)</em></span>
+        <input type="text" data-k="endMessage" maxlength="40" placeholder="Keep showing the time">
+        <div class="chips" data-for="endMessage">
+          <button data-v="">Keep time</button><button data-v="TIME'S UP">Time's up</button>
+          <button data-v="GO!">Go!</button><button data-v="LIVE NOW">Live now</button><button data-v="WELCOME BACK">Welcome back</button>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-k="endFlash"> Flash during the hold</label>
+    </details>
+
+    <details class="sec" open>
+      <summary>Position &amp; size</summary>
+      <div class="row">
+        <div class="posgrid" id="posgrid">
+          <button data-v="top-left" title="Top left"></button><button data-v="top-center" title="Top centre"></button><button data-v="top-right" title="Top right"></button>
+          <button data-v="left" title="Left"></button><button data-v="center" title="Centre"></button><button data-v="right" title="Right"></button>
+          <button data-v="bottom-left" title="Bottom left"></button><button data-v="bottom-center" title="Bottom centre"></button><button data-v="bottom-right" title="Bottom right"></button>
+        </div>
+        <div class="sliders">
+          <label>Size <output data-out="size"></output><input type="range" data-k="size" min="5" max="100" step="1"></label>
+          <label>Edge margin <output data-out="margin"></output><input type="range" data-k="margin" min="0" max="240" step="2"></label>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Background &amp; colours</summary>
+      <div class="row">
+        <div class="swatches" data-k="bg">
+          <button data-v="transparent" class="sw-alpha" title="Transparent"></button>
+          <button data-v="black" style="background:#000" title="Black"></button>
+          <button data-v="green" style="background:#00b140" title="Green screen"></button>
+          <button data-v="blue" style="background:#0047bb" title="Blue screen"></button>
+          <button data-v="white" style="background:#fff" title="White"></button>
+          <button data-v="custom" class="sw-custom" title="Custom colour"><input type="color" data-k="bgCustom"></button>
+        </div>
+        <span class="bgname" id="bgname"></span>
+      </div>
+      <div class="colors-head"><span class="lbl" id="colorsFor">Colours</span><button class="chip" id="btnResetColors">Reset colours</button></div>
+      <div class="colors" id="colors"></div>
+      <div class="note">Swatches marked <b>AUTO</b> follow the theme's own look until you pick a colour; × puts them back to auto.</div>
+      <label class="check"><input type="checkbox" data-k="warnOn"> Warning colour for the last <input type="number" class="num sm" data-k="warnSecs" min="1" max="3600"> sec</label>
+      <div class="checks">
+        <label class="check"><input type="checkbox" data-k="glow"> Glow</label>
+        <label class="check"><input type="checkbox" data-k="shadow"> Drop shadow</label>
+        <label class="check"><input type="checkbox" data-k="smooth"> Smooth motion</label>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Sound</summary>
+      <label class="check"><input type="checkbox" data-k="beep"> Beep for the last <input type="number" class="num sm" data-k="beepSecs" min="1" max="60"> sec</label>
+      <label class="check"><input type="checkbox" data-k="zeroBeep"> Long beep at zero</label>
+      <div class="check">
+        <label class="check inline"><input type="checkbox" data-k="tick"> Tick</label>
+        <select data-k="tickMode" class="inline-select">
+          <option value="all">every second</option>
+          <option value="last">for the last…</option>
+        </select>
+        <span id="tickLast"><input type="number" class="num sm" data-k="tickSecs" min="1" max="3600"> sec</span>
+      </div>
+      <div class="row">
+        <span class="lbl">Tick sound</span>
+        <select data-k="tickSound">
+          <option value="auto">Auto — flip sound for the Flip clock</option>
+          <option value="tick">Tick</option>
+          <option value="flip">Flip card</option>
+          <option value="click">Soft click</option>
+        </select>
+        <button class="chip" id="btnTestTick">Test</button>
+      </div>
+      <div class="note">If a beep and a tick land on the same second, you hear the beep.</div>
+      <div class="row">
+        <label class="slider">Tone <output data-out="beepFreq"></output><input type="range" data-k="beepFreq" min="300" max="2000" step="10"></label>
+        <label class="slider">Volume <output data-out="beepVol"></output><input type="range" data-k="beepVol" min="0" max="100" step="1"></label>
+        <button class="chip" id="btnTestBeep">Test</button>
+      </div>
+      <div class="clipbox">
+        <div class="row">
+          <label class="filebtn chip">Choose sound clip…<input type="file" id="clipFile" accept="audio/*"></label>
+          <span class="clipname" id="clipName">No clip</span>
+          <button class="chip" id="btnClearClip" hidden>Remove</button>
+        </div>
+        <div class="row">
+          <select data-k="clipMode">
+            <option value="off">Don't play the clip</option>
+            <option value="start">Play at the start</option>
+            <option value="endAtZero">Play so it ends exactly at zero</option>
+            <option value="atZero">Play when the timer hits zero</option>
+            <option value="loop">Loop until zero (background music)</option>
+          </select>
+          <label class="slider">Volume <output data-out="clipVol"></output><input type="range" data-k="clipVol" min="0" max="100" step="1"></label>
+        </div>
+        <div class="note">The clip is remembered in this browser and saved with presets.</div>
+      </div>
+    </details>
+
+    <details class="sec export" open>
+      <summary>Export</summary>
+      <div class="formats" data-k="exportFormat">
+        <button data-v="mov-png"><b>MOV · transparent</b><span>PNG codec with alpha + sound. For Vegas and Camtasia.</span></button>
+        <button data-v="mp4"><b>MP4 · H.264</b><span>Solid background, small file. Transparent becomes black.</span></button>
+        <button data-v="png-seq"><b>PNG sequence</b><span>A folder of transparent frames + audio.wav.</span></button>
+        <button data-v="wav"><b>WAV</b><span>Just the beeps / clip as a sound file.</span></button>
+      </div>
+      <label class="check" id="compactRow"><input type="checkbox" data-k="compact"> Compact MOV — store repeated frames once (untick if an editor shows glitches)</label>
+      <div class="xinfo" id="xinfo"></div>
+      <div class="row">
+        <button class="btn primary" id="btnExport">Export</button>
+        <button class="btn" id="btnCancel" hidden>Cancel</button>
+      </div>
+      <div class="xprog" id="xprog" hidden>
+        <div class="xbar"><div class="xfill" id="xfill"></div></div>
+        <div class="xtxt" id="xtxt"></div>
+      </div>
+      <div class="xstatus" id="xstatus"></div>
+    </details>
+
+    <details class="sec howto" open>
+      <summary>Using the files in your editor</summary>
+      <p class="note">Put the countdown on a track <b>above</b> your footage so the transparent parts show the video underneath. Pick your editor:</p>
+
+      <details name="howto">
+        <summary>VEGAS Pro</summary>
+        <ol>
+          <li>Drag the <b>.mov</b> onto a video track above your footage.</li>
+          <li>If the background shows black instead of see-through: right-click the clip → <i>Properties</i> → <i>Media</i> tab → <i>Alpha channel</i> → <b>Straight (unmatted)</b> → OK.</li>
+          <li>The sound comes in on its own audio track with the clip.</li>
+          <li><b>PNG sequence instead:</b> <i>File → Import → Media</i>, open the folder, select the first frame and tick <b>Open still image sequence</b>. Then add <i>audio.wav</i> to an audio track at the same start time.</li>
+        </ol>
+      </details>
+
+      <details name="howto">
+        <summary>Camtasia</summary>
+        <ol>
+          <li><i>Import Media</i> (Ctrl+I) and choose the <b>.mov</b>. It appears in the Media Bin.</li>
+          <li>Drag it onto a track above your footage. The transparency is kept automatically.</li>
+          <li>Use the MOV rather than the PNG sequence. Camtasia handles MOV files with the PNG codec, which is what this exports.</li>
+          <li>To move or resize the timer, drag it on the canvas. It's a normal 1920×1080 clip.</li>
+        </ol>
+      </details>
+
+      <details name="howto">
+        <summary>DaVinci Resolve</summary>
+        <ol>
+          <li>Import the <b>.mov</b> into the Media Pool (drag it in, or <i>File → Import → Media</i>).</li>
+          <li>Drop it on <b>V2</b> (or higher) above your footage on V1.</li>
+          <li>If the background isn't see-through: right-click the clip in the Media Pool → <i>Clip Attributes</i> → <i>Video</i> → <i>Alpha Mode</i> → <b>Straight</b>.</li>
+          <li><b>PNG sequence:</b> import the folder. Resolve shows the numbered frames as one clip. Add <i>audio.wav</i> on an audio track.</li>
+        </ol>
+      </details>
+
+      <details name="howto">
+        <summary>Adobe Premiere Pro</summary>
+        <ol>
+          <li><i>File → Import</i> the <b>.mov</b> and place it on V2 above your footage.</li>
+          <li>Transparency is usually picked up automatically. If not: right-click the clip in the Project panel → <i>Modify → Interpret Footage</i> → make sure <i>Ignore Alpha Channel</i> is off.</li>
+          <li><b>PNG sequence:</b> <i>File → Import</i>, select the first frame and tick <b>Image Sequence</b>.</li>
+        </ol>
+      </details>
+
+      <details name="howto">
+        <summary>OBS Studio (live streams)</summary>
+        <ol>
+          <li>In your scene, add a <b>Media Source</b> and choose the <b>.mov</b>. It plays with transparency over your other sources.</li>
+          <li>Tick <i>Restart playback when source becomes active</i> so it starts from the top each time you show it.</li>
+          <li>Drag the source to position or resize it.</li>
+        </ol>
+      </details>
+
+      <details name="howto">
+        <summary>Other editors</summary>
+        <ol>
+          <li>Try the <b>.mov</b> first. Most editors read QuickTime with the PNG codec and keep the transparency.</li>
+          <li>If yours doesn't, use the <b>PNG sequence</b> (almost every editor can import numbered image sequences) plus <i>audio.wav</i>.</li>
+          <li>If you don't need transparency, the <b>MP4</b> works everywhere. Or export on green and use the editor's chroma key.</li>
+        </ol>
+      </details>
+    </details>
+
+  </aside>
+</main>
+
+<script src="js/core.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/themes/classic.js"></script>
+<script src="js/themes/more.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/mux.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+<script src="js/presets.js"></script>
+</body>
+</html>
