@@ -59,7 +59,7 @@
           break;
         }
       }
-      return { dir: await parent.getDirectoryHandle(name, { create: true }), folderName: name };
+      return { dir: await parent.getDirectoryHandle(name, { create: true }), folderName: name, parentName: parent.name };
     }
     const f = FORMATS[format], name = CDM.exportName(S, f.ext);
     if (window.showSaveFilePicker) {
@@ -285,7 +285,9 @@
       await writeWavTo(sink, N, events, check);
       await writeFileRetry(dest.dir, 'audio.wav', sink.blob, check);
     }
-    return dest.folderName + '/';
+    // A sequence is a folder of images, not one file, so say exactly what was made and where.
+    return `a folder named “${dest.folderName}”${dest.parentName ? ` inside “${dest.parentName}”` : ''} ` +
+      `(${N.toLocaleString()} PNG frames${audio ? ' + audio.wav' : ''}; in VEGAS import frame_${'0'.repeat(Math.max(5, String(N).length))}.png as an image sequence)`;
   }
 
   // ── WAV
