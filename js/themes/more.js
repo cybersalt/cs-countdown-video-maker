@@ -9,7 +9,7 @@
   const TAU = Math.PI * 2;
 
   // ── FLIP CLOCK (split-flap cards, one per group: H / MM / SS)
-  const FLIP = { px: 300, h: 400, digitW: 165, pad: 50, colon: 70, dur: 0.55 };
+  const FLIP = { px: 300, h: 400, digitW: 165, pad: 50, colon: 70, dur: 0.4 };
   function flipLayout(text) {
     const groups = text.split(':');
     const widths = groups.map(g => g.length * FLIP.digitW + FLIP.pad * 2);
@@ -38,25 +38,29 @@
     id: 'flip', name: 'Flip clock', font: OSWALD,
     colors: { panel: 'Cards', text: 'Numbers', accent: 'Colon', border: 'Card edge', label: 'Label' },
     box(m) { return { w: flipLayout(m.text).w + 40, h: FLIP.h + (m.label ? 130 : 0) + 40 }; },
-    motion: m => (m.animating && m.since < FLIP.dur) ? 'a' + Math.round(m.since * 30) : false,
+    // The flip runs during the last FLIP.dur seconds BEFORE each change and lands
+    // exactly on the second, in sync with beeps and ticks.
+    motion: m => m.untilNext < FLIP.dur ? 'a' + Math.round(m.untilNext * 30) : false,
     draw(ctx, m) {
-      const L = flipLayout(m.text), prev = m.prevText.split(':');
-      const sameShape = prev.length === L.groups.length;
+      const flipping = m.untilNext < FLIP.dur;
+      const L = flipLayout(m.text), next = m.nextText.split(':');
+      const sameShape = next.length === L.groups.length;
       const y = -FLIP.h / 2 - (m.label ? 55 : 0);
       let x = -L.w / 2;
-      const p = m.animating ? Math.min(1, m.since / FLIP.dur) : 1;
-      L.groups.forEach((g, i) => {
-        const w = L.widths[i], old = sameShape ? prev[i] : g;
+      const p = flipping ? 1 - m.untilNext / FLIP.dur : 1;
+      L.groups.forEach((cur, i) => {
+        const w = L.widths[i], nxt = flipping && sameShape ? next[i] : cur;
         // shadow under card
         ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.35)'; CDM.roundRect(ctx, x + 6, y + 14, w, FLIP.h, 24); ctx.fill(); ctx.restore();
-        if (p >= 1 || old === g) {
-          flipHalf(ctx, m, g, x, y, w, FLIP.h, 'top', 1);
-          flipHalf(ctx, m, g, x, y, w, FLIP.h, 'bottom', 1);
+        if (nxt === cur) {
+          flipHalf(ctx, m, cur, x, y, w, FLIP.h, 'top', 1);
+          flipHalf(ctx, m, cur, x, y, w, FLIP.h, 'bottom', 1);
         } else {
-          flipHalf(ctx, m, g, x, y, w, FLIP.h, 'top', 1);
-          flipHalf(ctx, m, old, x, y, w, FLIP.h, 'bottom', 1);
-          if (p < 0.5) flipHalf(ctx, m, old, x, y, w, FLIP.h, 'top', Math.cos(p * Math.PI));
-          else flipHalf(ctx, m, g, x, y, w, FLIP.h, 'bottom', -Math.cos(p * Math.PI));
+          // new number behind on top, old number still on the bottom, leaf falling between
+          flipHalf(ctx, m, nxt, x, y, w, FLIP.h, 'top', 1);
+          flipHalf(ctx, m, cur, x, y, w, FLIP.h, 'bottom', 1);
+          if (p < 0.5) flipHalf(ctx, m, cur, x, y, w, FLIP.h, 'top', Math.cos(p * Math.PI));
+          else flipHalf(ctx, m, nxt, x, y, w, FLIP.h, 'bottom', -Math.cos(p * Math.PI));
         }
         // hinge
         ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(x, y + FLIP.h / 2 - 2, w, 5);

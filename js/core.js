@@ -108,6 +108,11 @@ window.CDM = window.CDM || {};
     }
     // No flip/transition into the very first value shown.
     const animating = t >= 1 && !(finished && t - T >= 1);
+    // Time until the display next changes, and what it changes to. Animated themes
+    // (the flip clock) run their transition *before* the change so the new number
+    // lands exactly on the second — where the beeps and ticks are.
+    const untilNext = finished ? Infinity : 1 - since;
+    const nextValue = down ? value - 1 : value + 1;
 
     const remainingSecs = down ? value : T - value;
     const urgent = S.warnOn && !finished && T > 0 && remainingSecs <= (S.warnSecs | 0) && remainingSecs > 0;
@@ -126,6 +131,8 @@ window.CDM = window.CDM || {};
       smooth: !!S.smooth,
       text: CDM.formatTime(value, S.format, T),
       prevText: CDM.formatTime(Math.max(0, prevValue), S.format, T),
+      untilNext,
+      nextText: CDM.formatTime(Math.max(0, nextValue), S.format, T),
       label: (S.label || '').trim(),
       message: showMessage ? S.endMessage.trim() : '',
       finished, holding, urgent: urgent || zeroUrgent, flashOff,

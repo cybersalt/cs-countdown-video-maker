@@ -35,6 +35,7 @@
   // Synthesised once into sample buffers, so the export and the preview play the
   // exact same samples (the noise uses a fixed seed).
   const SAMPLES = {};
+  const FLIP_LANDING = 0.055;   // seconds from the start of the flip sample to the card landing
   A.TICK_SOUNDS = { tick: 'Tick', flip: 'Flip card', click: 'Soft click' };
   A.tickSoundFor = S => S.tickSound && S.tickSound !== 'auto' ? S.tickSound : (S.theme === 'flip' ? 'flip' : 'tick');
   function makeSample(kind) {
@@ -55,7 +56,7 @@
       for (let i = 0; i < n; i++) {
         const t = i / SR, w = rnd();
         const e1 = Math.exp(-t / 0.010) * Math.min(1, t / 0.0015);
-        const t2 = t - 0.055, e2 = t2 > 0 ? Math.exp(-t2 / 0.016) * Math.min(1, t2 / 0.001) : 0;
+        const t2 = t - FLIP_LANDING, e2 = t2 > 0 ? Math.exp(-t2 / 0.016) * Math.min(1, t2 / 0.001) : 0;
         const thump = t2 > 0 ? Math.sin(2 * Math.PI * 190 * t2) * Math.exp(-t2 / 0.018) : 0;
         out[i] = bpHi(w) * e1 * 1.6 + bpLo(w) * e2 * 2.4 + thump * 0.35;
       }
@@ -97,7 +98,10 @@
       const from = S.tickMode === 'last' ? Math.max(0, T - (S.tickSecs | 0)) : 0;
       const sound = A.tickSoundFor(S), dur = sample(sound).length / SR;
       const tv = vol * (sound === 'tick' ? 0.45 : 0.6);
-      for (let s = from; s < T; s++) if (!beepAt.has(s)) ev.push({ type: 'tick', t: s, sound, dur, vol: tv });
+      // The flip sample's "landing" is 55 ms in; start it early so the landing is on the second.
+      // No flip sound at 0:00 of the video: nothing flips there (the first card lands at 1 s).
+      const lead = sound === 'flip' ? FLIP_LANDING : 0;
+      for (let s = sound === 'flip' ? Math.max(1, from) : from; s < T; s++) if (!beepAt.has(s)) ev.push({ type: 'tick', t: s - lead, sound, dur, vol: tv });
     }
     if (A.clip && S.clipMode !== 'off') {
       const d = A.clip.duration, v = (S.clipVol | 0) / 100;
