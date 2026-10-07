@@ -17,10 +17,14 @@
     return lctx;
   }
 
-  CDM.placement = function (box, S) {
+  // refBox (optional, from theme.scaleBox): a fixed reference size the scale is
+  // based on, so e.g. flip cards are the same size for 9:00, 10:00 and 1:00:00.
+  // The scale is still capped so the actual box never overflows the frame.
+  CDM.placement = function (box, S, refBox) {
     const margin = Math.max(0, +S.margin || 0);
-    const fit = Math.min((W - 2 * margin) / box.w, (H - 2 * margin) / box.h);
-    const sc = fit * Math.max(5, Math.min(100, +S.size || 100)) / 100;
+    const fitOf = b => Math.min((W - 2 * margin) / b.w, (H - 2 * margin) / b.h);
+    let sc = fitOf(refBox || box) * Math.max(5, Math.min(100, +S.size || 100)) / 100;
+    if (refBox) sc = Math.min(sc, fitOf(box));
     const w = box.w * sc, h = box.h * sc;
     const pos = S.position || 'center';
     let x = W / 2, y = H / 2;
@@ -43,7 +47,7 @@
     if (m.flashOff) return m;
 
     const box = theme.box(m, S);
-    const pl = CDM.placement(box, S);
+    const pl = CDM.placement(box, S, theme.scaleBox && theme.scaleBox(m, S));
     // Area that can contain drawn pixels (box + room for glow and drop shadow).
     // The PNG encoder only reads this region back from the canvas.
     const pad = 130 * pl.sc + 48;

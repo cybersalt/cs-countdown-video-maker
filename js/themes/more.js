@@ -12,7 +12,8 @@
   const FLIP = { px: 300, h: 400, digitW: 165, pad: 50, colon: 70, dur: 0.4 };
   function flipLayout(text) {
     const groups = text.split(':');
-    const widths = groups.map(g => g.length * FLIP.digitW + FLIP.pad * 2);
+    // every card is at least two digits wide (9:00 and 1:00:00 get the same cards as 10:00)
+    const widths = groups.map(g => Math.max(2, g.length) * FLIP.digitW + FLIP.pad * 2);
     const w = widths.reduce((a, b) => a + b, 0) + FLIP.colon * (groups.length - 1);
     return { groups, widths, w };
   }
@@ -40,6 +41,9 @@
     // Card sizes come from the widest time (fitText), so 10:00 → 9:59 keeps a two-digit
     // minutes card with the 9 centred in it instead of resizing the whole clock.
     box(m) { return { w: flipLayout(m.fitText).w + 40, h: FLIP.h + (m.label ? 130 : 0) + 40 }; },
+    // Card size is always based on a standard two-card MM:SS clock; an hours card
+    // just makes the clock wider, never the cards smaller (unless it can't fit the frame).
+    scaleBox(m) { return { w: flipLayout('00:00').w + 40, h: FLIP.h + (m.label ? 130 : 0) + 40 }; },
     // The flip runs during the last FLIP.dur seconds BEFORE each change and lands
     // exactly on the second, in sync with beeps and ticks.
     motion: m => m.untilNext < FLIP.dur ? 'a' + Math.round(m.untilNext * 30) : false,
