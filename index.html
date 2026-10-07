@@ -196,9 +196,9 @@
     <details class="sec export" open>
       <summary>Export</summary>
       <div class="formats" data-k="exportFormat">
-        <button data-v="mov-png"><b>MOV · transparent</b><span>PNG codec with alpha + sound. For Vegas and Camtasia.</span></button>
+        <button data-v="mov-png"><b>MOV · transparent</b><span>PNG codec with alpha + sound. For Camtasia, Resolve, Premiere, OBS. (Not VEGAS 23.)</span></button>
         <button data-v="mp4"><b>MP4 · H.264</b><span>Solid background, small file. Transparent becomes black.</span></button>
-        <button data-v="png-seq"><b>PNG sequence</b><span>A folder of transparent frames + audio.wav.</span></button>
+        <button data-v="png-seq"><b>PNG sequence</b><span>A folder of transparent frames + audio.wav. Use this for VEGAS Pro 23.</span></button>
         <button data-v="wav"><b>WAV</b><span>Just the beeps / clip as a sound file.</span></button>
       </div>
       <label class="check" id="compactRow"><input type="checkbox" data-k="compact"> Compact MOV — store repeated frames once (untick if an editor shows glitches)</label>
@@ -221,10 +221,12 @@
       <details name="howto">
         <summary>VEGAS Pro</summary>
         <ol>
-          <li>Drag the <b>.mov</b> onto a video track above your footage.</li>
-          <li>If the background shows black instead of see-through: right-click the clip → <i>Properties</i> → <i>Media</i> tab → <i>Alpha channel</i> → <b>Straight (unmatted)</b> → OK.</li>
-          <li>The sound comes in on its own audio track with the clip.</li>
-          <li><b>PNG sequence instead:</b> <i>File → Import → Media</i>, open the folder, select the first frame and tick <b>Open still image sequence</b>. Then add <i>audio.wav</i> to an audio track at the same start time.</li>
+          <li><b>Export as PNG sequence.</b> VEGAS Pro 23 dropped Apple's QuickTime plugin, so it can't read the transparent MOV (you only get the sound).</li>
+          <li><i>File → Import → Media</i>, open the exported folder, select <b>frame_00000.png</b> and tick <b>Open still image sequence</b>. The whole countdown comes in as one clip.</li>
+          <li>Drag it onto a video track above your footage. If the background shows black instead of see-through: right-click the clip → <i>Properties</i> → <i>Media</i> tab → <i>Alpha channel</i> → <b>Straight (unmatted)</b>.</li>
+          <li>In the same <i>Media</i> tab, check the <b>frame rate is 30</b> so the clip stays in sync with the sound.</li>
+          <li>Add <i>audio.wav</i> from the same folder to an audio track, starting at the same point as the clip.</li>
+          <li>Older VEGAS (22 and earlier, with QuickTime enabled under <i>Preferences → Deprecated Features</i>) can use the .mov directly.</li>
         </ol>
       </details>
 

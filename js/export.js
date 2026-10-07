@@ -219,6 +219,28 @@
   }
 
   // ── PNG SEQUENCE (+ audio.wav)
+  // Sync tools (OneDrive, Dropbox) and virus scanners grab new files the moment they
+  // appear; Chrome then fails the write with InvalidStateError ("state cached in an
+  // interface object ... had changed"). Retry those with a back-off instead of failing.
+  const RETRYABLE = new Set(['InvalidStateError', 'NoModificationAllowedError', 'NotReadableError', 'UnknownError']);
+  async function writeFileRetry(dir, name, data, check) {
+    for (let attempt = 0; ; attempt++) {
+      let w = null;
+      try {
+        const fh = await dir.getFileHandle(name, { create: true });
+        w = await fh.createWritable();
+        await w.write(data);
+        await w.close();
+        return;
+      } catch (e) {
+        if (w) { try { await w.abort(); } catch (_) { /* already closed */ } }
+        if (attempt >= 6 || !RETRYABLE.has(e.name)) throw e;
+        check();
+        await new Promise(r => setTimeout(r, 200 * 2 ** attempt));   // 0.2 s … 6.4 s
+      }
+    }
+  }
+
   async function exportPngSeq(job, N, events, audio, progress, check) {
     const { S, dest } = job;
     const canvas = makeCanvas(), ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -231,18 +253,16 @@
       const t = i / FPS, key = CDM.frameKey(t, S);
       if (key !== lastKey) { CDM.render(ctx, t, S); lastBlob = CDM.encodePNG(ctx, CDM.lastBounds, bg); lastKey = key; }
       const name = `frame_${String(i).padStart(digits, '0')}.png`, blobP = lastBlob;
-      inflight.push((async () => {
-        const fh = await dest.dir.getFileHandle(name, { create: true });
-        const w = await fh.createWritable(); await w.write(await blobP); await w.close();
-      })());
-      if (inflight.length >= 8) await inflight.shift();
+      inflight.push(blobP.then(bytes => writeFileRetry(dest.dir, name, bytes, check)));
+      if (inflight.length >= 4) await inflight.shift();
       if (i % 15 === 0) progress(i);
     }
     await Promise.all(inflight);
     if (audio) {
-      const fh = await dest.dir.getFileHandle('audio.wav', { create: true });
-      const sink = new CDM.FileSink(await fh.createWritable());
+      // Built in memory, then written in one go, so it gets the same retry protection.
+      const sink = new CDM.MemorySink();
       await writeWavTo(sink, N, events, check);
+      await writeFileRetry(dest.dir, 'audio.wav', sink.blob, check);
     }
     return dest.folderName + '/';
   }

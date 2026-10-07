@@ -30,9 +30,9 @@ Built by [Cybersalt Consulting Ltd.](https://cybersalt.com)
 
 | Format | Transparent | Sound | Best for |
 |---|---|---|---|
-| **MOV · transparent** (PNG codec) | ✅ | ✅ PCM | Vegas Pro and Camtasia overlays |
+| **MOV · transparent** (PNG codec) | ✅ | ✅ PCM | Camtasia, Resolve, Premiere, OBS overlays (not VEGAS 23) |
 | **MP4 · H.264** | ❌ (transparent becomes black) | ✅ AAC | Full-screen countdowns, small files |
-| **PNG sequence** + `audio.wav` | ✅ | ✅ separate WAV | Fallback if an editor won't read the MOV |
+| **PNG sequence** + `audio.wav` | ✅ | ✅ separate WAV | VEGAS Pro 23, or any editor that won't read the MOV. Save outside OneDrive/Dropbox folders if you can |
 | **WAV** | n/a | ✅ | The beeps or clip on their own |
 
 All output is 1920×1080 at 30 fps. MP4 has a keyframe every second for smooth scrubbing.
@@ -41,7 +41,7 @@ All output is 1920×1080 at 30 fps. MP4 has a keyframe every second for smooth s
 
 The app's **Using the files in your editor** panel has step-by-step instructions for each editor. The short version:
 
-- **VEGAS Pro:** drag the `.mov` onto a track above your footage. If the background shows as black, right-click the clip → *Properties → Media → Alpha channel* → **Straight (unmatted)**.
+- **VEGAS Pro 23:** use the **PNG sequence** export. VEGAS 23 removed Apple's QuickTime plugin, which is what let older VEGAS read PNG-codec MOVs; a transparent MOV imports as sound only. Import the first frame with **Open still image sequence**, set the media frame rate to 30, and add `audio.wav`. (VEGAS 22 and earlier with QuickTime enabled can use the `.mov`. If the background shows black, right-click → *Properties → Media → Alpha channel* → **Straight (unmatted)**.)
 - **Camtasia:** import the `.mov` into the Media Bin and drag it onto a track above your footage. TechSmith lists MOV with the PNG codec as supported on Windows.
 - **DaVinci Resolve:** put the `.mov` on V2 above your footage. If needed: *Clip Attributes → Video → Alpha Mode → Straight*.
 - **PNG sequence:** import the first frame as an image sequence (Vegas: tick **Open still image sequence**), then add `audio.wav` on an audio track.

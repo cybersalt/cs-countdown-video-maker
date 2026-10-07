@@ -271,6 +271,7 @@
     else if (f === 'mp4' && S.bg === 'transparent') html += '<br><span class="warn">MP4 can\'t be transparent — the background will be black. Use MOV for transparency.</span>';
     else if ((f === 'mov-png' || f === 'png-seq') && S.bg !== 'transparent') html += `<br><span class="warn">Background is ${BG_NAMES[S.bg].toLowerCase()} — pick the checkered swatch for a transparent overlay.</span>`;
     else if (f === 'wav' && !CDM.audio.hasAudio(S)) html += '<br><span class="warn">No sound is turned on.</span>';
+    if (T && f === 'png-seq') html += '<br><span class="warn">Tip: save to a folder that OneDrive / Dropbox doesn\'t sync (e.g. on another drive). Sync tools grab each new frame as it\'s written, which slows the export down.</span>';
     $('#xinfo').innerHTML = html + '<span id="xest"></span>';
     $('#compactRow').hidden = f !== 'mov-png';
     clearTimeout(estTimer);
