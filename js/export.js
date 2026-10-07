@@ -15,7 +15,12 @@
   CDM.loadFonts = () => Promise.all(CDM.FONTS.map(f => document.fonts.load(f).catch(() => null)));
 
   const pad2 = n => String(n).padStart(2, '0');
+  // Characters Windows/macOS don't allow in file names.
+  CDM.safeFileName = s => String(s).replace(/[\\/:*?"<>|\x00-\x1f]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^\.+|[. ]+$/g, '').slice(0, 120);
   CDM.exportName = function (S, ext) {
+    // Named after the loaded/saved preset when there is one.
+    const preset = CDM.currentPresetName && CDM.safeFileName(CDM.currentPresetName);
+    if (preset) return `${preset}.${ext}`;
     const h = S.hours | 0, m = S.minutes | 0, s = S.seconds | 0;
     const dur = (h ? `${h}h` : '') + `${h ? pad2(m) : m}m${pad2(s)}s`;
     return `countdown-${dur}-${S.theme}${S.bg === 'transparent' ? '-alpha' : ''}.${ext}`;

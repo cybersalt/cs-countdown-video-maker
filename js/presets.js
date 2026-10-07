@@ -94,10 +94,14 @@
     $('#btnPresetExportAll').hidden = !userPresets.length;
   }
 
+  // The current preset's name is used for exported file names (CDM.exportName).
+  function setCurrent(name) { CDM.currentPresetName = name || ''; CDM.app.refresh(); }
+
   $('#presetSel').addEventListener('change', async () => {
     const s = selected();
     updateButtons();
-    if (!s.preset) return;
+    if (!s.preset) { setCurrent(''); return; }
+    setCurrent(s.preset.name);
     if (s.kind === 'starter') {
       CDM.app.applySettings({ ...CDM.DEFAULTS, ...s.preset.settings });
       status(`Loaded “${s.preset.name}”.`);
@@ -117,6 +121,7 @@
     try {
       await putPreset({ name, settings: { ...CDM.app.settings }, clip: currentClip(), saved: Date.now() });
       await refreshList('user:' + name);
+      setCurrent(name);
       status(`Saved “${name}”${currentClip() ? ' (with the sound clip)' : ''}.`, 'ok');
     } catch (e) {
       status(`Couldn't save the preset: ${e.message}`, 'err');
@@ -127,6 +132,7 @@
     const s = selected();
     if (s.kind !== 'user' || !confirm(`Delete the preset “${s.preset.name}”?`)) return;
     await delPreset(s.preset.name);
+    if (CDM.currentPresetName === s.preset.name) setCurrent('');
     await refreshList();
     status(`Deleted “${s.preset.name}”.`);
   });
@@ -144,7 +150,6 @@
   }
   const packClip = c => c ? { name: c.name, data: toB64(c.bytes) } : null;
   const unpackClip = c => c && typeof c.data === 'string' ? { name: String(c.name || 'clip'), bytes: fromB64(c.data) } : null;
-  const fileSafe = s => s.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'countdown';
 
   function downloadJSON(obj, filename) {
     const url = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' }));
@@ -157,7 +162,7 @@
     const s = selected();
     const name = s.kind === 'user' ? s.preset.name : (s.kind === 'starter' ? s.preset.name : 'Countdown settings');
     downloadJSON({ app: APP_ID, type: 'preset', version: 1, name, settings: { ...CDM.app.settings }, clip: packClip(currentClip()) },
-      `countdown-preset-${fileSafe(name)}.json`);
+      `${CDM.safeFileName(name) || 'Countdown settings'}.json`);
     status(`Exported the current settings${currentClip() ? ' and sound clip' : ''}.`, 'ok');
   });
 

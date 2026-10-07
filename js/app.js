@@ -264,7 +264,9 @@
     const T = CDM.totalSeconds(S), N = CDM.frameCount(S), f = S.exportFormat;
     const parts = [`Length ${fmtClock(videoLen())}`, `${N.toLocaleString()} frames`];
     if (CDM.audio.hasAudio(S)) parts.push('with sound');
-    let html = parts.join(' · ');
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const fname = f === 'png-seq' ? CDM.exportName(S, 'x').replace(/\.x$/, '') + '/' : CDM.exportName(S, { 'mov-png': 'mov', mp4: 'mp4', wav: 'wav' }[f]);
+    let html = `Saves as <b>${esc(fname)}</b><br>` + parts.join(' · ');
     if (!T) html = '<span class="warn">Set a time first.</span>';
     else if (f === 'mp4' && S.bg === 'transparent') html += '<br><span class="warn">MP4 can\'t be transparent — the background will be black. Use MOV for transparency.</span>';
     else if ((f === 'mov-png' || f === 'png-seq') && S.bg !== 'transparent') html += `<br><span class="warn">Background is ${BG_NAMES[S.bg].toLowerCase()} — pick the checkered swatch for a transparent overlay.</span>`;

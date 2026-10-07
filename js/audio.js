@@ -22,7 +22,9 @@
   // The original file bytes are kept too (A.clipBytes) so the clip can be saved
   // with presets and remembered between visits.
   A.loadClipBytes = async function (name, bytes) {
-    const clip = await ctx().decodeAudioData(bytes.slice(0));   // decode detaches its input
+    // OfflineAudioContext decodes (and resamples to 48 kHz) without needing a user
+    // gesture, so a remembered clip can be restored on page load. decode detaches its input.
+    const clip = await new OfflineAudioContext(2, 1, SR).decodeAudioData(bytes.slice(0));
     A.clip = clip; A.clipName = name; A.clipBytes = bytes;
     return clip;
   };
