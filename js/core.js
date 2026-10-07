@@ -58,7 +58,12 @@ window.CDM = window.CDM || {};
   CDM.BACKGROUNDS = {
     transparent: null,
     black: '#000000',
-    green: '#00b542',           // chroma-key green: HSV 142° / 100% / 71% (Tim's keyer setting)
+    // Pure primaries match the VEGAS Chroma Keyer presets "Pure Green Screen" (HSV 120/1/1)
+    // and "Pure Blue Screen" (240/1/1) exactly, so the key is clean with no tuning.
+    puregreen: '#00ff00',
+    pureblue: '#0000ff',
+    // Traditional chroma-key colours (closer to physical screens).
+    green: '#00b542',           // HSV 142° / 100% / 71%
     blue: '#0047bb',
     white: '#ffffff',
   };

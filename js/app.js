@@ -232,7 +232,14 @@
   }
   function refresh() { syncUI(); updateInfo(); dirty = true; }
 
-  const BG_NAMES = { transparent: 'Transparent', black: 'Black', green: 'Green screen', blue: 'Blue screen', white: 'White', custom: 'Custom colour' };
+  const BG_NAMES = {
+    transparent: 'Transparent', black: 'Black',
+    puregreen: 'Pure green #00FF00 · VEGAS preset “Pure Green Screen”',
+    green: 'Chroma green #00B542',
+    pureblue: 'Pure blue #0000FF · VEGAS preset “Pure Blue Screen”',
+    blue: 'Chroma blue #0047BB',
+    white: 'White', custom: 'Custom colour',
+  };
   const OUT_FMT = { size: v => v + '%', margin: v => v + ' px', beepFreq: v => v + ' Hz', beepVol: v => v + '%', clipVol: v => v + '%' };
 
   function syncUI(skipKey) {
@@ -269,7 +276,7 @@
     let html = `Saves as <b>${esc(fname)}</b><br>` + parts.join(' · ');
     if (!T) html = '<span class="warn">Set a time first.</span>';
     else if (f === 'mp4' && S.bg === 'transparent') html += '<br><span class="warn">MP4 can\'t be transparent — the background will be black. Use MOV for transparency.</span>';
-    else if ((f === 'mov-png' || f === 'png-seq') && S.bg !== 'transparent') html += `<br><span class="warn">Background is ${BG_NAMES[S.bg].toLowerCase()} — pick the checkered swatch for a transparent overlay.</span>`;
+    else if ((f === 'mov-png' || f === 'png-seq') && S.bg !== 'transparent') html += `<br><span class="warn">Background is ${BG_NAMES[S.bg].split(/ #| ·/)[0].toLowerCase()} — pick the checkered swatch for a transparent overlay.</span>`;
     else if (f === 'wav' && !CDM.audio.hasAudio(S)) html += '<br><span class="warn">No sound is turned on.</span>';
     if (T && f === 'png-seq') html += '<br><span class="warn">Tip: save to a folder that OneDrive / Dropbox doesn\'t sync (e.g. on another drive). Sync tools grab each new frame as it\'s written, which slows the export down.</span>';
     $('#xinfo').innerHTML = html + '<span id="xest"></span>';

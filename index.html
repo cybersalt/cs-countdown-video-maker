@@ -127,8 +127,10 @@
         <div class="swatches" data-k="bg">
           <button data-v="transparent" class="sw-alpha" title="Transparent"></button>
           <button data-v="black" style="background:#000" title="Black"></button>
-          <button data-v="green" style="background:#00b542" title="Green screen (chroma green #00B542)"></button>
-          <button data-v="blue" style="background:#0047bb" title="Blue screen"></button>
+          <button data-v="puregreen" style="background:#00ff00" title="Pure green #00FF00 (VEGAS “Pure Green Screen” preset)"></button>
+          <button data-v="green" style="background:#00b542" title="Chroma green #00B542"></button>
+          <button data-v="pureblue" style="background:#0000ff" title="Pure blue #0000FF (VEGAS “Pure Blue Screen” preset)"></button>
+          <button data-v="blue" style="background:#0047bb" title="Chroma blue #0047BB"></button>
           <button data-v="white" style="background:#fff" title="White"></button>
           <button data-v="custom" class="sw-custom" title="Custom colour"><input type="color" data-k="bgCustom"></button>
         </div>
@@ -226,6 +228,7 @@
           <li>Drag it onto a video track above your footage. If the background shows black instead of see-through: right-click the clip → <i>Properties</i> → <i>Media</i> tab → <i>Alpha channel</i> → <b>Straight (unmatted)</b>.</li>
           <li>In the same <i>Media</i> tab, check the <b>frame rate is 30</b> so the clip stays in sync with the sound.</li>
           <li>Add <i>audio.wav</i> from the same folder to an audio track, starting at the same point as the clip.</li>
+          <li><b>One file instead (green screen):</b> pick the <b>Pure green</b> background, turn off <i>Drop shadow</i> and <i>Glow</i>, and export <b>MP4</b>. In VEGAS add <i>Video FX → Chroma Keyer</i> to the clip and choose the preset <b>Pure Green Screen</b>. (Use <b>Pure blue</b> + <i>Pure Blue Screen</i> if your timer has green in it.)</li>
           <li>Older VEGAS (22 and earlier, with QuickTime enabled under <i>Preferences → Deprecated Features</i>) can use the .mov directly.</li>
         </ol>
       </details>
