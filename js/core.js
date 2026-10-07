@@ -58,7 +58,7 @@ window.CDM = window.CDM || {};
   CDM.BACKGROUNDS = {
     transparent: null,
     black: '#000000',
-    green: '#00b140',
+    green: '#00b542',           // chroma-key green: HSV 142° / 100% / 71% (Tim's keyer setting)
     blue: '#0047bb',
     white: '#ffffff',
   };
