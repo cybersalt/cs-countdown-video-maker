@@ -131,10 +131,18 @@ window.CDM = window.CDM || {};
     const dark = bg ? CDM.luma(bg) < 0.5 : true;
     const acc = urgent || zeroUrgent ? S.warn : S.accent;
 
+    // Layout must not change as the time counts (10:00 → 9:59 is one digit shorter,
+    // which would resize the whole timer). Themes size themselves from fitText, the
+    // widest string this countdown ever shows, and LED-style themes draw padText,
+    // the current time padded with blank digit cells (U+2007) to the same length.
+    const text = CDM.formatTime(value, S.format, T);
+    const fitText = CDM.formatTime(T, S.format, T).replace(/\d/g, '0');
+
     return {
       t, T, down, value, prevValue, since, animating, progress,
       smooth: !!S.smooth,
-      text: CDM.formatTime(value, S.format, T),
+      text, fitText,
+      padText: text.padStart(fitText.length, ' '),
       prevText: CDM.formatTime(Math.max(0, prevValue), S.format, T),
       untilNext,
       nextText: CDM.formatTime(Math.max(0, nextValue), S.format, T),

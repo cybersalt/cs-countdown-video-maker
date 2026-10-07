@@ -38,7 +38,7 @@
         ctx.strokeStyle = m.c.acc; ctx.lineWidth = lw; ctx.lineCap = 'butt'; ctx.stroke();
         ctx.restore();
       }
-      const px = CDM.fitTabular(ctx, m.text, BEBAS, 560, 290);
+      const px = CDM.fitTabular(ctx, m.fitText, BEBAS, 560, 290);
       ctx.font = `${px}px ${BEBAS}`; ctx.fillStyle = m.c.fg;
       CDM.fillTabularCentered(ctx, m.text, 0, 0);
       CDM.drawLabel(ctx, m, 0, 190, 44);
@@ -71,11 +71,12 @@
   CDM.registerTheme({
     id: 'radio', name: 'Radio', font: MONO,
     colors: { accent: 'LED digits', track: 'Unlit segments', panel: 'Body', border: 'Bezel', label: 'Label' },
-    box(m) { const d = radioDims(m.text.replace(/\d/g, '8'), m); return { w: d.cw + 20, h: d.ch + 20 }; },
+    box(m) { const d = radioDims(m.fitText, m); return { w: d.cw + 20, h: d.ch + 20 }; },
     draw(ctx, m) {
-      const d = radioDims(m.text, m);
+      const d = radioDims(m.fitText, m);
       const py = radioBody(ctx, m, d);
-      CDM.drawSeg7(ctx, m.text, 0, py + d.ph / 2, R_DH, m.c.acc, m.c.track || CDM.rgba(m.c.acc, 0.1), m);
+      // padText keeps a dark (unlit) digit where 10:00 becomes 9:59, like a real clock radio
+      CDM.drawSeg7(ctx, m.padText, 0, py + d.ph / 2, R_DH, m.c.acc, m.c.track || CDM.rgba(m.c.acc, 0.1), m);
       if (m.label) {
         ctx.save(); CDM.glow(ctx, m, m.c.label, 12);
         CDM.drawLabel(ctx, m, 0, py + d.ph + 62, 34);
@@ -83,7 +84,7 @@
       }
     },
     drawMessage(ctx, m) {
-      const d = radioDims(m.text, m);
+      const d = radioDims(m.fitText, m);
       const py = radioBody(ctx, m, d);
       const px = CDM.fitFont(ctx, m.message.toUpperCase(), MONO, d.pw - 80, 170);
       ctx.save();
@@ -143,7 +144,7 @@
       const iw = 300, ih = 82, iy = fR * 0.27;
       ctx.fillStyle = light ? 'rgba(0,0,0,0.07)' : 'rgba(0,0,0,0.55)'; CDM.roundRect(ctx, -iw / 2, iy, iw, ih, 8); ctx.fill();
       ctx.strokeStyle = light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.stroke();
-      const px = CDM.fitTabular(ctx, m.text, BEBAS, iw - 30, 62);
+      const px = CDM.fitTabular(ctx, m.fitText, BEBAS, iw - 30, 62);
       ctx.font = `${px}px ${BEBAS}`; ctx.fillStyle = m.c.fg;
       CDM.fillTabularCentered(ctx, m.text, 0, iy + ih / 2);
       // sweep hand: always clockwise, one turn per minute
@@ -171,7 +172,7 @@
     draw(ctx, m) {
       ctx.fillStyle = m.c.acc;
       ctx.fillRect(-540, -360, 1080, 5); ctx.fillRect(-540, 355, 1080, 5);
-      const px = CDM.fitTabular(ctx, m.text, BEBAS, 1180, 400);
+      const px = CDM.fitTabular(ctx, m.fitText, BEBAS, 1180, 400);
       ctx.save();
       ctx.font = `${px}px ${BEBAS}`; ctx.fillStyle = m.c.fg;
       CDM.glow(ctx, m, CDM.rgba(m.c.fg, 0.25), 30);

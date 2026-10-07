@@ -37,18 +37,22 @@
   CDM.registerTheme({
     id: 'flip', name: 'Flip clock', font: OSWALD,
     colors: { panel: 'Cards', text: 'Numbers', accent: 'Colon', border: 'Card edge', label: 'Label' },
-    box(m) { return { w: flipLayout(m.text).w + 40, h: FLIP.h + (m.label ? 130 : 0) + 40 }; },
+    // Card sizes come from the widest time (fitText), so 10:00 → 9:59 keeps a two-digit
+    // minutes card with the 9 centred in it instead of resizing the whole clock.
+    box(m) { return { w: flipLayout(m.fitText).w + 40, h: FLIP.h + (m.label ? 130 : 0) + 40 }; },
     // The flip runs during the last FLIP.dur seconds BEFORE each change and lands
     // exactly on the second, in sync with beeps and ticks.
     motion: m => m.untilNext < FLIP.dur ? 'a' + Math.round(m.untilNext * 30) : false,
     draw(ctx, m) {
       const flipping = m.untilNext < FLIP.dur;
-      const L = flipLayout(m.text), next = m.nextText.split(':');
-      const sameShape = next.length === L.groups.length;
+      const groups = m.text.split(':'), next = m.nextText.split(':');
+      let L = flipLayout(m.fitText);
+      if (L.groups.length !== groups.length) L = flipLayout(m.text);   // safety net; formats keep the same groups
+      const sameShape = next.length === groups.length;
       const y = -FLIP.h / 2 - (m.label ? 55 : 0);
       let x = -L.w / 2;
       const p = flipping ? 1 - m.untilNext / FLIP.dur : 1;
-      L.groups.forEach((cur, i) => {
+      groups.forEach((cur, i) => {
         const w = L.widths[i], nxt = flipping && sameShape ? next[i] : cur;
         // shadow under card
         ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.35)'; CDM.roundRect(ctx, x + 6, y + 14, w, FLIP.h, 24); ctx.fill(); ctx.restore();
@@ -109,14 +113,14 @@
   CDM.registerTheme({
     id: 'scoreboard', name: 'Scoreboard', font: MONO,
     colors: { accent: 'Lit bulbs', track: 'Unlit bulbs', panel: 'Board', border: 'Frame', label: 'Label bulbs' },
-    box(m) { const d = sbDims(m.text.replace(/\d/g, '0'), m); return { w: d.w + 60, h: d.h + 60 }; },
+    box(m) { const d = sbDims(m.fitText, m); return { w: d.w + 60, h: d.h + 60 }; },
     draw(ctx, m) {
-      const d = sbDims(m.text.replace(/\d/g, '0'), m);
-      sbBoard(ctx, m, d); sbContent(ctx, m, d, m.text);
+      const d = sbDims(m.fitText, m);
+      sbBoard(ctx, m, d); sbContent(ctx, m, d, m.padText);   // unused leading digit stays as unlit bulbs
     },
     drawMessage(ctx, m, box) {
       const msg = m.message.toUpperCase();
-      const d = sbDims(m.text.replace(/\d/g, '0'), m);
+      const d = sbDims(m.fitText, m);
       const need = CDM.dotWidth(msg, SB.pitch, 1) + 100;
       const dd = { w: Math.max(d.w, need), h: d.h };
       const s = Math.min(1, (box.w - 60) / dd.w);
@@ -151,7 +155,7 @@
         ctx.lineWidth = big ? 4 : 2; ctx.stroke();
       }
       ctx.beginPath(); ctx.arc(0, cy, 34, 0, TAU); ctx.fillStyle = CDM.shade(m.c.panel, 1.8); ctx.fill();
-      const px = CDM.fitTabular(ctx, m.text, BEBAS, 760, 230);
+      const px = CDM.fitTabular(ctx, m.fitText, BEBAS, 760, 230);
       ctx.font = `${px}px ${BEBAS}`; ctx.fillStyle = m.c.fg;
       CDM.fillTabularCentered(ctx, m.text, 0, cy + r + 150);
       CDM.drawLabel(ctx, m, 0, cy + r + 270, 44);
@@ -206,7 +210,7 @@
   function neon(ctx, m, text, tab) {
     const fw = 1300, fh = 640;
     tube(ctx, m, m.c.border || m.c.fg, 9, () => { CDM.roundRect(ctx, -fw / 2, -fh / 2, fw, fh, 60); ctx.stroke(); });
-    const px = tab ? CDM.fitTabular(ctx, text, BEBAS, 1100, 380) : CDM.fitFont(ctx, text, BEBAS, 1100, 380);
+    const px = tab ? CDM.fitTabular(ctx, m.fitText, BEBAS, 1100, 380) : CDM.fitFont(ctx, text, BEBAS, 1100, 380);
     ctx.font = `${px}px ${BEBAS}`; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
     const ty = (m.label ? -30 : 0) + CDM.inkMid(ctx, tab ? '0123456789' : text);
     tube(ctx, m, m.c.acc, 7, () => {
@@ -222,7 +226,7 @@
 
   // ── BADGE (compact pill, made for corner overlays)
   function badgeDims(m) {
-    const tw = CDM.measureTabular(m.text.replace(/\d/g, '0'), BEBAS, 130);
+    const tw = CDM.measureTabular(m.fitText, BEBAS, 130);
     const lw = m.label ? CDM.measure(m.label.toUpperCase(), MONO, 34, 6) : 0;
     const content = Math.max(tw, lw);
     const h = m.label ? 220 : 170;
@@ -276,7 +280,7 @@
       }
       ctx.fillStyle = m.c.track || m.c.faint; ctx.fill(offP);
       ctx.save(); ctx.fillStyle = m.c.acc; CDM.glow(ctx, m, m.c.acc, 35); ctx.fill(onP); ctx.restore();
-      const px = CDM.fitTabular(ctx, m.text, ORBIT, 520, 170, 900);
+      const px = CDM.fitTabular(ctx, m.fitText, ORBIT, 520, 170, 900);
       ctx.font = `900 ${px}px ${ORBIT}`; ctx.fillStyle = m.c.fg;
       CDM.fillTabularCentered(ctx, m.text, 0, 0);
       CDM.drawLabel(ctx, m, 0, 130, 36);
@@ -298,7 +302,7 @@
         ctx.beginPath(); ctx.moveTo(cx - sx * L, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy - sy * L); ctx.stroke();
       });
       ctx.restore();
-      const px = CDM.fitTabular(ctx, m.text, ORBIT, 1240, 260, 700);
+      const px = CDM.fitTabular(ctx, m.fitText, ORBIT, 1240, 260, 700);
       ctx.font = `700 ${px}px ${ORBIT}`; ctx.fillStyle = m.c.fg;
       ctx.save(); CDM.glow(ctx, m, CDM.rgba(m.c.fg, 0.35), 25);
       CDM.fillTabularCentered(ctx, m.text, 0, 0);
