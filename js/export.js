@@ -36,9 +36,30 @@
   CDM.pickDestination = async function (S, format) {
     if (format === 'png-seq') {
       if (!window.showDirectoryPicker) throw new Error('PNG sequence export needs Chrome or Edge (folder access).');
-      const dir = await window.showDirectoryPicker({ id: 'cdm-export', mode: 'readwrite' });
-      const name = CDM.exportName(S, 'x').replace(/\.x$/, '');
-      return { dir: await dir.getDirectoryHandle(name, { create: true }), folderName: name };
+      // Browsers have no "save folder as" dialog: pick the parent folder, then name
+      // the new folder the frames go into.
+      const parent = await window.showDirectoryPicker({ id: 'cdm-export', mode: 'readwrite' });
+      const cancelled = () => new DOMException('Export cancelled', 'AbortError');
+      let name = CDM.exportName(S, 'x').replace(/\.x$/, '');
+      for (;;) {
+        const input = prompt(`Name for the new folder of frames (inside “${parent.name}”):`, name);
+        if (input === null) throw cancelled();
+        name = CDM.safeFileName(input);
+        if (!name) continue;
+        let existing = null;
+        try { existing = await parent.getDirectoryHandle(name); } catch (e) { /* doesn't exist yet */ }
+        if (!existing) break;
+        let count = 0;
+        for await (const _ of existing.keys()) { count++; if (count > 0) break; }
+        if (!count) break;   // exists but empty: just use it
+        // Old frames must not be left behind: a longer earlier export would leave
+        // extra frames that VEGAS would play as part of the sequence.
+        if (confirm(`“${name}” already exists in “${parent.name}” and has files in it.\n\nReplace its contents? (OK = delete the old files and export there, Cancel = choose another name)`)) {
+          await parent.removeEntry(name, { recursive: true });
+          break;
+        }
+      }
+      return { dir: await parent.getDirectoryHandle(name, { create: true }), folderName: name };
     }
     const f = FORMATS[format], name = CDM.exportName(S, f.ext);
     if (window.showSaveFilePicker) {
