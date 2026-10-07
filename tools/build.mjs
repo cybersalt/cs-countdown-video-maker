@@ -21,7 +21,8 @@ html = html.replace(/<script src="([^"]+)"><\/script>/g, (_, src) => {
   const code = read(src);
   if (/<\/script/i.test(code)) throw new Error(`${src} contains "</script" and can't be inlined`);
   n++;
-  return `<script>\n// ── ${src}\n${code}</script>`;
+  // data-cfasync="false" keeps Cloudflare's Rocket Loader (on for cybersalt.com) from deferring/rewriting the scripts.
+  return `<script data-cfasync="false">\n// ── ${src}\n${code}</script>`;
 });
 
 if (/(?:src|href)="(?:css|js)\//.test(html)) throw new Error('a local css/js reference was not inlined');
